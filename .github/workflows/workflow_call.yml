@@ -23,13 +23,11 @@ jobs:
 
       - name: Configure Git
         run: |
-          git config user.name "Pranjal Sailwal"
+          git config user.name "sailwalpranjal"
           git config user.email "pranjalsailwal09@gmail.com"
 
       - name: Set up GitHub CLI
-        uses: cli/cli-action@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+        run: gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Perform Random Activities
         env:
