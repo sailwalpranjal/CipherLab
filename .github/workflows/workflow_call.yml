@@ -1,0 +1,12 @@
+name: Call Random Activity Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  call-random-activity:
+    uses: sailwalpranjal/task-manager/.github/workflows/activity-CipherLab.yml@main
+    with:
+    secrets: inherit # Inherit secrets from the parent repository
