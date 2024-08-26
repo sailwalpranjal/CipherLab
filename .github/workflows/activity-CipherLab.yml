@@ -37,12 +37,12 @@ jobs:
         run: |
           git merge --strategy-option theirs
 
-      - name: Run automation scripts
-        run: |
+      #- name: Run automation scripts
+        #run: |
           # Your existing automation script logic here
-          git add .
+          #git add .
           # Commit and push will be handled dynamically by the create_commit function
-          git push origin main
+          #git push origin main
 
 
       - name: Run automation script
