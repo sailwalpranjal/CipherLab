@@ -286,43 +286,43 @@ jobs:
           case $random_task in
             0)
               log_message "Task: Creating a commit"
-              create_commit
+              create_commit()
               ;;
             1)
               log_message "Task: Creating an issue"
-              create_issue
+              create_issue()
               ;;
             2)
               log_message "Task: Creating a pull request"
-              create_pull_request
+              create_pull_request()
               ;;
             3)
               log_message "Task: Reviewing code"
-              review_code
+              review_code()
               ;;
             4)
               log_message "Task: Merging a pull request"
-              merge_pull_request
+              merge_pull_request()
               ;;
             5)
               log_message "Task: Closing a pull request"
-              close_pull_request
+              close_pull_request()
               ;;
             6)
               log_message "Task: Deleting branches"
-              delete_branches
+              delete_branches()
               ;;
             7)
               log_message "Task: Creating a branch"
-              create_branch
+              create_branch()
               ;;
             8)
               log_message "Task: Labeling an issue"
-              label_issue
+              label_issue()
               ;;
             9)
               log_message "Task: Assigning an issue"
-              assign_issue
+              assign_issue()
               ;;
             *)
               log_message "No valid task selected"
