@@ -95,6 +95,8 @@ jobs:
           # Function to create a pull request
           create_pull_request() {
             branch="feature/$(date +'%Y%m%d%H%M%S')"
+            git config user.email "pranjalsailwal09@gmail.com"
+            git config user.name "sailwalpranjal"
             git checkout -b "$branch"
             check_command "git checkout -b $branch"
             echo "Temporary changes for testing" > temp.txt
