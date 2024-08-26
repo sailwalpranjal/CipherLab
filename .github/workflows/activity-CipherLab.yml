@@ -208,7 +208,7 @@ jobs:
             # Remove temporary files
             rm -f temp.txt
             # Remove commits made by the script
-            git reflog expire --expire=now --all-ref
+            git reflog expire --expire=now --all
             git gc --prune=now
             log_message "Removed temporary changes and cleaned up commits"
           }
