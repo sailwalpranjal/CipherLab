@@ -262,7 +262,8 @@ jobs:
           # Function to run code analysis
           run_code_analysis() {
             log_message "Running code analysis"
-            # Insert actual code analysis command here
+            flake8 .
+            check_command "flake8 ."
           }
 
           # Function to delete closed issues
@@ -280,7 +281,7 @@ jobs:
           }
 
           # Randomly choose a task to perform
-          random_task=$(random_choice 9)
+          random_task=$(random_choice)
 
           case $random_task in
             0)
