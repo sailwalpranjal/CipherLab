@@ -37,16 +37,6 @@ jobs:
             echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
           }
 
-            # Function to introduce a random delay
-          random_delay() {
-            delay=$(( (RANDOM % 3600) + 600 ))  # Random delay between 10 and 70 minutes
-            log_message "Sleeping for $((delay / 60)) minutes."
-            sleep $delay
-          }
-
-          # Add a random delay before running the main tasks
-          random_delay
-
           # Define commit messages and types
           commit_types=("fix" "feat" "chore" "docs" "style" "refactor" "test" "build")
           commit_messages=(
@@ -251,6 +241,16 @@ jobs:
 
           # Clean up after running tasks
           clean_up_code
+
+          # Function to introduce a random delay
+          random_delay() {
+            delay=$(( (RANDOM % 3600) + 600 ))  # Random delay between 10 and 70 minutes
+            log_message "Sleeping for $((delay / 60)) minutes."
+            sleep $delay
+          }
+
+          # Add a random delay before running the main tasks
+          random_delay
 
           # Sleep between 2 AM and 9 AM UTC
           sleep $(( (9 + 24 - 2) * 3600 ))  # Sleep until 9 AM UTC the next day
