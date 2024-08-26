@@ -5,10 +5,9 @@ on:
     branches:
       - main
   schedule:
-    - cron: '30 9-2/1 * * *'  # Randomly triggers between 9 AM to 2 AM every hour
-    - cron: '0 3 * * *'       # Daily 3 AM sleep period for 5 hours
-    - cron: '0 8 * * *'       # Resume activity at 9 AM
-  workflow_dispatch:          # Allows manual triggering
+    - cron: '30 9 * * *'  # Triggers at 9:30 AM daily
+    - cron: '0 15 * * *'  # Triggers at 3:00 PM daily
+  workflow_dispatch:      # Allows manual triggering
 
 jobs:
   setup_and_balance_activity:
