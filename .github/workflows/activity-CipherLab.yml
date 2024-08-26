@@ -173,7 +173,7 @@ jobs:
 
           # Function to manage GitHub Actions workflows
           manage_workflows() {
-            workflow_files=$(ls .github/workflows/)
+            workflow_files=$(ls .github/workflows/ 2>/dev/null || true)
             if [ -n "$workflow_files" ]; then
               for file in $workflow_files; do
                 mv ".github/workflows/$file" ".github/workflows/backup-$file"
@@ -241,16 +241,3 @@ jobs:
 
           # Clean up after running tasks
           clean_up_code
-
-          # Function to introduce a random delay
-          #random_delay() {
-            #delay=$(( (RANDOM % 3600) + 600 ))  # Random delay between 10 and 70 minutes
-            #log_message "Sleeping for $((delay / 60)) minutes."
-            #sleep $delay
-          #}
-
-          # Add a random delay before running the main tasks
-          #random_delay
-
-          # Sleep between 2 AM and 9 AM UTC
-          sleep $(( (9 - 2) * 3600 ))  # Sleep until 9 AM UTC from 2 AM UTC
