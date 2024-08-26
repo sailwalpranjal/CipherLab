@@ -40,9 +40,9 @@ jobs:
       - name: Run automation scripts
         run: |
           # Your existing automation script logic here
-           git add .
-           git commit -m "chore: Improve styling of the login page"
-           git push origin main
+          git add .
+          # Commit and push will be handled dynamically by the create_commit function
+          git push origin main
 
 
       - name: Run automation script
@@ -62,15 +62,17 @@ jobs:
           # Function to check command success
           check_command() {
             if [ $? -ne 0 ]; then
-              log_message "Error: Command failed: $1"
+              log_message "Error: Command failed: $1. Exiting with status $?"
               exit 1
             fi
           }
 
           # Function to make random choices
           random_choice() {
-            echo $((RANDOM % $1))
+            echo $((RANDOM % $10))
           }
+
+          random_task=$(random_choice)
 
           # Define commit messages and types
           commit_types=("fix" "feat" "chore" "docs" "style" "refactor" "test" "build")
@@ -176,26 +178,34 @@ jobs:
           # Function to delete branches
           delete_branches() {
             branches=$(git branch -r | grep 'origin/feature/')
-            git config --global user.email "pranjalsailwal09@gmail.com"
-            git config --global user.name "sailwalpranjal"
             if [ -n "$branches" ]; then
               for branch in $branches; do
-                git push origin --delete "${branch#origin/}"
-                check_command "git push origin --delete ${branch#origin/}"
-                log_message "Deleted branch ${branch#origin/}"
+                branch_name="${branch#origin/}"
+                git config user.email "pranjalsailwal09@gmail.com"
+                git config user.name "sailwalpranjal"
+                if [ "$branch_name" != "main" ]; then
+                  git push origin --delete "$branch_name"
+                  check_command "git push origin --delete $branch_name"
+                  log_message "Deleted branch $branch_name"
+                else
+                  log_message "Skipped deleting protected branch: $branch_name"
+                fi
               done
             else
               log_message "No branches to delete"
             fi
-          }
 
           # Function to create a new branch
           create_branch() {
             new_branch="feature/$(date +'%Y%m%d%H%M%S')"
-            git checkout -b "$new_branch"
+            git checkout -b "$new_branch"            
+            git config user.email "pranjalsailwal09@gmail.com"
+            git config user.name "sailwalpranjal"
             check_command "git checkout -b $new_branch"
             git push --set-upstream origin "$new_branch"
             check_command "git push --set-upstream origin $new_branch"
+            git config user.email "pranjalsailwal09@gmail.com"
+            git config user.name "sailwalpranjal"
             log_message "New branch created: $new_branch"
           }
 
@@ -234,17 +244,20 @@ jobs:
 
           # Function to manage Actions workflows
           manage_workflows() {
-            workflow_files=$(ls ./workflows/ 2>/dev/null || true)
-            if [ -n "$workflow_files" ]; then
-              for file in $workflow_files; do
-                mv "./workflows/$file" "./workflows/backup-$file"
-                check_command "mv ./workflows/$file ./workflows/backup-$file"
-                log_message "Backed up workflow file: $file"
-              done
+            if [ -d "./workflows/" ]; then
+              workflow_files=$(ls ./workflows/ 2>/dev/null || true)
+              if [ -n "$workflow_files" ]; then
+                for file in $workflow_files; do
+                  mv "./workflows/$file" "./workflows/backup-$file"
+                  check_command "mv ./workflows/$file ./workflows/backup-$file"
+                  log_message "Backed up workflow file: $file"
+                done
             else
               log_message "No workflow files found for management"
             fi
-          }
+          else
+            log_message "Workflows directory does not exist"
+          fi
 
           # Function to run code analysis
           run_code_analysis() {
