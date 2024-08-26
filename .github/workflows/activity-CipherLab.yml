@@ -281,7 +281,7 @@ jobs:
           }
 
           # Randomly choose a task to perform
-          random_task=$(random_choice)
+          random_task=$(random_choice 10)
 
           case $random_task in
             0)
