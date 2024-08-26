@@ -1,13 +1,12 @@
-name: Call Random Activity Workflow
+name: Call Activity Workflow
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch: # Allows manual triggering of the workflow
+  workflow_dispatch:  # Allows manual triggering of the workflow
 
 jobs:
   call-random-activity:
-  uses: sailwalpranjal/task-manager/.github/workflows/activity-CipherLab.yml@<commit-sha>
-  
-    secrets: inherit
+    uses: sailwalpranjal/task-manager/.github/workflows/activity-CipherLab.yml@main  # Reference to the main branch
+    secrets: inherit  # Inherit secrets like PAT_TOKEN from the calling repository
