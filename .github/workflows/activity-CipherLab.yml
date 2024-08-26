@@ -31,10 +31,9 @@ jobs:
 
       - name: Create .gitignore for Auto Files
         run: |
-          echo "auto_change.txt" >> .gitignore
           echo "Change_autologs.txt" >> .gitignore
           git add .gitignore
-          git commit -m "Add auto-generated files to .gitignore"
+          git commit -m "Update .gitignore"
           git push origin main
 
       - name: Fetch Activity Data
@@ -99,8 +98,8 @@ jobs:
 
       - name: Update Activity Tracking
         run: |
-          echo "$(date): Updated by ${GITHUB_ACTOR}" >> auto_change.txt
-          git add auto_change.txt
+          echo "$(date): Updated by ${GITHUB_ACTOR}" >> update_log.txt
+          git add update_log.txt
           git commit -m "Update activity log"
           git push origin main
 
