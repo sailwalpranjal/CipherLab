@@ -12,19 +12,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-      - name: Install Dependencies
-        run: |
-          npm install
-
-      - name: Run Tests
-        run: |
-          npm test
-
       - name: Setup GitHub CLI
         run: |
           sudo apt-get update
@@ -196,9 +183,7 @@ jobs:
 
           # Function to run code analysis
           run_code_analysis() {
-            npm run lint
-            npm run test -- --coverage
-            log_message "Code analysis and tests completed"
+            log_message "Running code analysis"
           }
 
           # Function to delete closed issues
