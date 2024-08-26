@@ -17,11 +17,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y gh
-          echo "${{ secrets.TOKEN_GITHUB }}" | gh auth login --with-token
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
 
       - name: Run automation script
         env:
-          GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           #!/bin/bash
 
