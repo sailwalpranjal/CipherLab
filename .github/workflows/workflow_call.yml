@@ -9,4 +9,5 @@ on:
 jobs:
   call-random-activity:
   uses: sailwalpranjal/task-manager/.github/workflows/activity-CipherLab.yml@<commit-sha>
-    secrets: inherit # Inherit secrets (like PAT_TOKEN) from the parent repository
+  
+    secrets: inherit
