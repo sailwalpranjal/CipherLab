@@ -8,6 +8,7 @@ on:
     - cron: '30 9-2/1 * * *'  # Randomly triggers between 9 AM to 2 AM every hour
     - cron: '0 3 * * *'       # Daily 3 AM sleep period for 5 hours
     - cron: '0 8 * * *'       # Resume activity at 9 AM
+  workflow_dispatch:          # Allows manual triggering
 
 jobs:
   setup_and_balance_activity:
@@ -35,10 +36,10 @@ jobs:
       - name: Fetch Activity Data
         id: fetch_activity
         run: |
-          COMMIT_COUNT=$(gh api -X GET repos/:owner/:repo/commits | jq length)
-          PR_COUNT=$(gh api -X GET repos/:owner/:repo/pulls | jq length)
-          ISSUE_COUNT=$(gh api -X GET repos/:owner/:repo/issues | jq length)
-          REVIEW_COUNT=$(gh api -X GET repos/:owner/:repo/pulls/reviews | jq length)
+          COMMIT_COUNT=$(gh api -X GET repos/${{ github.repository }}/commits | jq length)
+          PR_COUNT=$(gh api -X GET repos/${{ github.repository }}/pulls | jq length)
+          ISSUE_COUNT=$(gh api -X GET repos/${{ github.repository }}/issues | jq length)
+          REVIEW_COUNT=$(gh api -X GET repos/${{ github.repository }}/pulls/reviews | jq length)
           TOTAL_COUNT=$((COMMIT_COUNT + PR_COUNT + ISSUE_COUNT + REVIEW_COUNT))
           echo "commit_pct=$((COMMIT_COUNT * 100 / TOTAL_COUNT))" >> $GITHUB_ENV
           echo "pr_pct=$((PR_COUNT * 100 / TOTAL_COUNT))" >> $GITHUB_ENV
@@ -48,20 +49,20 @@ jobs:
       - name: Determine Next Action
         id: decide_action
         run: |
-          if [[ $REVIEW_PCT -lt 10 ]]; then
+          if [[ ${{ env.review_pct }} -lt 10 ]]; then
             NEXT_ACTION="review"
-          elif [[ $ISSUE_PCT -lt 10 ]]; then
+          elif [[ ${{ env.issue_pct }} -lt 10 ]]; then
             NEXT_ACTION="issue"
-          elif [[ $PR_PCT -lt 10 ]]; then
+          elif [[ ${{ env.pr_pct }} -lt 10 ]]; then
             NEXT_ACTION="pr"
           else
             NEXT_ACTION="commit"
           fi
-          echo "::set-output name=action::${NEXT_ACTION}"
+          echo "action=${NEXT_ACTION}" >> $GITHUB_ENV
 
       - name: Perform Action
         run: |
-          case "${{ steps.decide_action.outputs.action }}" in
+          case "${{ env.action }}" in
             commit)
               echo "Making changes to the file and committing..."
               git config --global user.email "pranjalsailwal09@gmail.com"
