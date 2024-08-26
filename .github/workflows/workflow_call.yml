@@ -4,9 +4,9 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch: # Allows manual triggering of the workflow
 
 jobs:
   call-random-activity:
     uses: sailwalpranjal/task-manager/.github/workflows/activity-CipherLab.yml@main
-    with:
-    secrets: inherit # Inherit secrets from the parent repository
+    secrets: inherit # Inherit secrets (like PAT_TOKEN) from the parent repository
