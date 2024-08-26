@@ -370,3 +370,4 @@ class CipherLab(tk.Tk):
 if __name__ == "__main__":
     app = CipherLab()
     app.mainloop()
+# Minor update to optimize function
