@@ -235,53 +235,70 @@ jobs:
           delete_issues() {
             issues=$(gh issue list --state closed --json number --jq '.[] | .number')
             if [ -n "$issues" ]; then
-              for issue in $issues; do
-                gh issue delete "$issue" --yes
+              for issue_number in $issues; do
+                gh issue delete "$issue_number" --confirm
                 check_command "gh issue delete"
-                log_message "Deleted closed issue #$issue"
+                log_message "Deleted issue #$issue_number"
               done
             else
               log_message "No closed issues to delete"
             fi
           }
 
-          # Function to clean up code added by the script
-          clean_up_code() {
-            git checkout main
-            check_command "git checkout main"
-            # Remove temporary files
-            rm -f temp.txt
-            # Remove commits made by the script
-            git reflog expire --expire=now --all
-            git gc --prune=now
-            log_message "Removed temporary changes and cleaned up commits"
-          }
+          # Randomly choose a task to perform
+          random_task=$(random_choice 10)
 
-          # Handle errors and exit gracefully
-          handle_error() {
-            log_message "An error occurred: $1"
-            exit 1
-          }
-
-          # Perform the selected task
-          task=$(random_choice 15)
-          case $task in
-            0) create_commit ;;
-            1) create_issue ;;
-            2) create_pull_request ;;
-            3) review_code ;;
-            4) merge_pull_request ;;
-            5) close_pull_request ;;
-            6) delete_branches ;;
-            7) create_branch ;;
-            8) label_issue ;;
-            9) assign_issue ;;
-            10) update_repo_settings ;;
-            11) manage_workflows ;;
-            12) run_code_analysis ;;
-            13) delete_issues ;;
-            14) log_message "No valid task selected" ;;
+          case $random_task in
+            0)
+              log_message "Task: Creating a commit"
+              create_commit
+              ;;
+            1)
+              log_message "Task: Creating an issue"
+              create_issue
+              ;;
+            2)
+              log_message "Task: Creating a pull request"
+              create_pull_request
+              ;;
+            3)
+              log_message "Task: Reviewing code"
+              review_code
+              ;;
+            4)
+              log_message "Task: Merging a pull request"
+              merge_pull_request
+              ;;
+            5)
+              log_message "Task: Closing a pull request"
+              close_pull_request
+              ;;
+            6)
+              log_message "Task: Deleting branches"
+              delete_branches
+              ;;
+            7)
+              log_message "Task: Creating a branch"
+              create_branch
+              ;;
+            8)
+              log_message "Task: Labeling an issue"
+              label_issue
+              ;;
+            9)
+              log_message "Task: Assigning an issue"
+              assign_issue
+              ;;
+            *)
+              log_message "No valid task selected"
+              ;;
           esac
 
-          # Clean up after running tasks
-          clean_up_code
+          # Include a sleep period if time is between 03:00 AM and 08:00 AM
+          current_hour=$(date +'%H')
+          if [ "$current_hour" -ge 3 ] && [ "$current_hour" -lt 8 ]; then
+            log_message "Sleeping until 09:00 AM"
+            sleep $(( (9 - current_hour) * 3600 ))
+          fi
+
+          log_message "Task execution completed"
