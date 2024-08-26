@@ -194,7 +194,7 @@ jobs:
             issues=$(gh issue list --state closed --json number --jq '.[] | .number')
             if [ -n "$issues" ]; then
               for issue in $issues; do
-                gh issue delete "$issue" --confirm
+                gh issue delete "$issue" --yes
                 log_message "Deleted closed issue #$issue"
               done
             else
