@@ -1,4 +1,4 @@
-name: Random Repository Activity
+name: CipherLab Repository Activity
 
 on:
   schedule:
