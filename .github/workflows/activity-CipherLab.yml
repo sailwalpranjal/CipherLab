@@ -2,7 +2,7 @@ name: CipherLab Repository Automation
 
 on:
   schedule:
-    - cron: '0 9 * * *'  # Runs daily at 9 AM
+    - cron: '0 9 * * *'  # Runs daily at 9 AM UTC
   workflow_dispatch:
 
 jobs:
@@ -11,11 +11,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
-      - name: Setup GitHub CLI
-        uses: cli/cli-action@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -30,12 +25,18 @@ jobs:
         run: |
           npm test
 
-      - name: Perform random actions
+      - name: Setup GitHub CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install gh
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
+      - name: Perform Random Actions
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           #!/bin/bash
-          
+
           # Function to make random choices
           random_choice() {
             echo $((RANDOM % $1))
@@ -73,22 +74,22 @@ jobs:
 
           # Function to create an issue
           create_issue() {
-            title="Issue - $(date +'%Y-%m-%d %H:%M:%S')"
-            body="A new issue has been created on $(date +'%Y-%m-%d %H:%M:%S'). Please review."
+            title="Automated Issue - $(date +'%Y-%m-%d %H:%M:%S')"
+            body="This issue was created automatically on $(date +'%Y-%m-%d %H:%M:%S'). Please review it."
             gh issue create --title "$title" --body "$body"
-            log_message "New issue created: $title"
+            log_message "Issue created: $title"
           }
 
           # Function to create a pull request
           create_pull_request() {
             branch="feature/$(date +'%Y%m%d%H%M%S')"
             git checkout -b "$branch"
-            echo "Temporary changes" > temp.txt
+            echo "Temporary changes for testing" > temp.txt
             git add temp.txt
             git commit -m "Add temporary changes for testing"
             git push --set-upstream origin "$branch"
-            pr_title="Pull Request - $(date +'%Y-%m-%d %H:%M:%S')"
-            pr_body="This pull request is created for the branch: $branch."
+            pr_title="Automated PR - $(date +'%Y-%m-%d %H:%M:%S')"
+            pr_body="This PR was created automatically from the branch: $branch."
             gh pr create --base main --head "$branch" --title "$pr_title" --body "$pr_body"
             log_message "Pull request created: $pr_title"
           }
@@ -98,7 +99,7 @@ jobs:
             prs=$(gh pr list --state open --json number --jq '.[] | .number')
             if [ -n "$prs" ]; then
               pr_number=$(echo "$prs" | head -n 1)
-              gh pr review "$pr_number" --approve --body "Looks good to me. Ready for merge."
+              gh pr review "$pr_number" --approve --body "Reviewed and approved on $(date +'%Y-%m-%d %H:%M:%S')."
               log_message "Pull request #$pr_number approved"
             else
               log_message "No open pull requests available for review"
@@ -129,13 +130,17 @@ jobs:
             fi
           }
 
-          # Function to delete a branch
-          delete_branch() {
+          # Function to delete branches
+          delete_branches() {
             branches=$(git branch -r | grep 'origin/feature/')
-            for branch in $branches; do
-              git push origin --delete "${branch#origin/}"
-              log_message "Deleted branch ${branch#origin/}"
-            done
+            if [ -n "$branches" ]; then
+              for branch in $branches; do
+                git push origin --delete "${branch#origin/}"
+                log_message "Deleted branch ${branch#origin/}"
+              done
+            else
+              log_message "No branches to delete"
+            fi
           }
 
           # Function to create a new branch
@@ -154,7 +159,7 @@ jobs:
               gh issue edit "$issue_number" --add-label "needs-triage"
               log_message "Label 'needs-triage' added to issue #$issue_number"
             else
-              log_message "No open issues available to label"
+              log_message "No issues available to label"
             fi
           }
 
@@ -166,7 +171,7 @@ jobs:
               gh issue edit "$issue_number" --assign "@me"
               log_message "Assigned issue #$issue_number to @me"
             else
-              log_message "No open issues to assign"
+              log_message "No issues available to assign"
             fi
           }
 
@@ -196,13 +201,17 @@ jobs:
             log_message "Code analysis and tests completed"
           }
 
-          # Function to delete issues
+          # Function to delete closed issues
           delete_issues() {
             issues=$(gh issue list --state closed --json number --jq '.[] | .number')
-            for issue in $issues; do
-              gh issue close "$issue"
-              log_message "Closed issue #$issue"
-            done
+            if [ -n "$issues" ]; then
+              for issue in $issues; do
+                gh issue delete "$issue" --confirm
+                log_message "Deleted closed issue #$issue"
+              done
+            else
+              log_message "No closed issues to delete"
+            fi
           }
 
           # Function to clean up code added by the script
@@ -223,7 +232,7 @@ jobs:
           }
 
           # Perform the selected task
-          task=$(random_choice 14)
+          task=$(random_choice 15)
           case $task in
             0) create_commit ;;
             1) create_issue ;;
@@ -231,7 +240,7 @@ jobs:
             3) review_code ;;
             4) merge_pull_request ;;
             5) close_pull_request ;;
-            6) delete_branch ;;
+            6) delete_branches ;;
             7) create_branch ;;
             8) label_issue ;;
             9) assign_issue ;;
@@ -239,11 +248,11 @@ jobs:
             11) manage_workflows ;;
             12) run_code_analysis ;;
             13) delete_issues ;;
-            *) log_message "No valid task selected" ;;
+            14) log_message "No valid task selected" ;;
           esac
 
           # Clean up after running tasks
           clean_up_code
 
-          # Sleep between 2 AM and 9 AM
-          sleep $(( (9 + 24 - 2) * 3600 ))  # Sleep until 9 AM the next day
+          # Sleep between 2 AM and 9 AM UTC
+          sleep $(( (9 + 24 - 2) * 3600 ))  # Sleep until 9 AM UTC the next day
