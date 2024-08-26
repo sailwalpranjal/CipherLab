@@ -72,7 +72,7 @@ jobs:
             echo $((RANDOM % $10))
           }
 
-          random_task=$(random_choice)
+          random_task=$(random_choice 10)
 
           # Define commit messages and types
           commit_types=("fix" "feat" "chore" "docs" "style" "refactor" "test" "build")
