@@ -1,4 +1,4 @@
-name: Call Activity Workflow
+name: Call Random Activity Workflow
 
 on:
   push:
@@ -8,5 +8,5 @@ on:
 
 jobs:
   call-random-activity:
-    uses: https://github.com/sailwalpranjal/task-manager/blob/main/.github/workflows/activity-CipherLab.yml@main  # Reference to the main branch
+    uses: sailwalpranjal/task-manager/.github/workflows/activity-CipherLab.yml@main  # Reference to the main branch
     secrets: inherit  # Inherit secrets like PAT_TOKEN from the calling repository
