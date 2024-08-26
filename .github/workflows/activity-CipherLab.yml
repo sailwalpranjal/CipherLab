@@ -21,24 +21,33 @@ jobs:
         with:
           node-version: '16.x'
 
+      - name: Authenticate GitHub CLI
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
       - name: Create .gitignore for Auto Files
         run: |
           echo "auto_change.txt" >> .gitignore
-          echo "YOUR_TEMP_FILE_NAME.txt" >> .gitignore
+          echo "Change_autologs.txt" >> .gitignore
           git add .gitignore
           git commit -m "Add auto-generated files to .gitignore"
           git push origin main
 
+      - name: Fetch Activity Data
+        id: fetch_activity
+        run: |
+          COMMIT_COUNT=$(gh api -X GET repos/:owner/:repo/commits | jq length)
+          PR_COUNT=$(gh api -X GET repos/:owner/:repo/pulls | jq length)
+          ISSUE_COUNT=$(gh api -X GET repos/:owner/:repo/issues | jq length)
+          REVIEW_COUNT=$(gh api -X GET repos/:owner/:repo/pulls/reviews | jq length)
+          TOTAL_COUNT=$((COMMIT_COUNT + PR_COUNT + ISSUE_COUNT + REVIEW_COUNT))
+          echo "commit_pct=$((COMMIT_COUNT * 100 / TOTAL_COUNT))" >> $GITHUB_ENV
+          echo "pr_pct=$((PR_COUNT * 100 / TOTAL_COUNT))" >> $GITHUB_ENV
+          echo "issue_pct=$((ISSUE_COUNT * 100 / TOTAL_COUNT))" >> $GITHUB_ENV
+          echo "review_pct=$((REVIEW_COUNT * 100 / TOTAL_COUNT))" >> $GITHUB_ENV
+
       - name: Determine Next Action
         id: decide_action
         run: |
-          # Fetch current activity percentages (Mock values, update as necessary)
-          COMMIT_PCT=93    # Replace with actual value or logic to fetch percentage
-          PR_PCT=6         # Replace with actual value or logic to fetch percentage
-          ISSUE_PCT=1      # Replace with actual value or logic to fetch percentage
-          REVIEW_PCT=0     # Replace with actual value or logic to fetch percentage
-
-          # Priority logic: favor underrepresented activities
           if [[ $REVIEW_PCT -lt 10 ]]; then
             NEXT_ACTION="review"
           elif [[ $ISSUE_PCT -lt 10 ]]; then
@@ -48,7 +57,6 @@ jobs:
           else
             NEXT_ACTION="commit"
           fi
-
           echo "::set-output name=action::${NEXT_ACTION}"
 
       - name: Perform Action
@@ -56,22 +64,22 @@ jobs:
           case "${{ steps.decide_action.outputs.action }}" in
             commit)
               echo "Making changes to the file and committing..."
-              git config --global user.email "user@example.com"
-              git config --global user.name "Automated Script"
-              echo "// Change made by script on $(date)" >> YOUR_FILE_PLACEHOLDER.txt
+              git config --global user.email "pranjalsailwal09@gmail.com"
+              git config --global user.name "sailwalpranjal"
+              echo "// Change made by script on $(date)" >> Change_autologs.txt
               git add .
               git commit -m "Update regarding specific functionality"
               git push origin main
               ;;
             pr)
               echo "Creating and resolving a PR..."
-              git checkout -b feature-auto-pr
+              git checkout -b "feature-auto-pr-$(date +%s)"
               echo "// Auto-generated changes for PR" >> auto_change.txt
               git add .
               git commit -m "Feature: auto-generated PR"
-              git push origin feature-auto-pr
+              git push origin HEAD
               gh pr create --title "Auto PR Feature" --body "This PR was automatically created."
-              gh pr merge feature-auto-pr --squash --delete-branch --auto
+              gh pr merge --squash --delete-branch --auto
               ;;
             issue)
               echo "Creating and closing an issue..."
@@ -88,7 +96,6 @@ jobs:
 
       - name: Update Activity Tracking
         run: |
-          echo "Updating the auto_change.txt for tracking purposes..."
           echo "$(date): Updated by ${GITHUB_ACTOR}" >> auto_change.txt
           git add auto_change.txt
           git commit -m "Update activity log"
@@ -96,7 +103,6 @@ jobs:
 
       - name: Clean Up
         run: |
-          echo "Ensuring no untracked files or branches are left..."
           git branch -D feature-auto-pr || true
           git stash clear
           git clean -f
