@@ -1,8 +1,0 @@
-name: Call Activity Workflow
-
-on:
-  workflow_call:
-
-jobs:
-  call_activity_workflow:
-    uses: sailwalpranjal/task-manager/.github/workflows/activity-CipherLab.yml@main
