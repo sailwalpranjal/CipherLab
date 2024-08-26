@@ -13,15 +13,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up GitHub CLI
+      - name: Set up CLI
         run: |
           sudo apt-get update
           sudo apt-get install -y gh
-          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+          echo "${{ secrets.TOKEN_GITHUB }}" | gh auth login --with-token
+
 
       - name: Run automation script
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
         run: |
           #!/bin/bash
 
@@ -171,12 +172,12 @@ jobs:
             log_message "Repository description updated"
           }
 
-          # Function to manage GitHub Actions workflows
+          # Function to manage  Actions workflows
           manage_workflows() {
-            workflow_files=$(ls .github/workflows/ 2>/dev/null || true)
+            workflow_files=$(ls ./workflows/ 2>/dev/null || true)
             if [ -n "$workflow_files" ]; then
               for file in $workflow_files; do
-                mv ".github/workflows/$file" ".github/workflows/backup-$file"
+                mv "./workflows/$file" "./workflows/backup-$file"
                 log_message "Backed up workflow file: $file"
               done
             else
