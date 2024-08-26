@@ -2,6 +2,7 @@ name: Call Activity Workflow
 
 on:
   workflow_call:
+  workflow_dispatch:
 
 jobs:
   call_activity_workflow:
