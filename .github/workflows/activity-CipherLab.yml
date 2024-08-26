@@ -45,7 +45,7 @@ jobs:
           #git push origin main
 
 
-      - name: Run automation scripts
+      - name: Run automation script
         env:
           GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
         run: |
