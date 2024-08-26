@@ -1,339 +1,102 @@
-name: CipherLab Repository Automation
+name: CipherLab automation changes
 
 on:
+  push:
+    branches:
+      - main
   schedule:
-    - cron: '0 * * * *'  # Runs every hour
-  workflow_dispatch:
+    - cron: '30 9-2/1 * * *'  # Randomly triggers between 9 AM to 2 AM every hour
+    - cron: '0 3 * * *'       # Daily 3 AM sleep period for 5 hours
+    - cron: '0 8 * * *'       # Resume activity at 9 AM
 
 jobs:
-  automate:
+  setup_and_balance_activity:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Set up Git
+      - name: Set Up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16.x'
+
+      - name: Create .gitignore for Auto Files
         run: |
-          git config --global user.email "pranjalsailwal09@gmail.com"
-          git config --global user.name "sailwalpranjal"
+          echo "auto_change.txt" >> .gitignore
+          echo "YOUR_TEMP_FILE_NAME.txt" >> .gitignore
+          git add .gitignore
+          git commit -m "Add auto-generated files to .gitignore"
+          git push origin main
 
-      - name: Set up CLI
+      - name: Determine Next Action
+        id: decide_action
         run: |
-          sudo apt-get update
-          sudo apt-get install -y gh
-          echo "${{ secrets.TOKEN_GITHUB }}" | gh auth login --with-token
+          # Fetch current activity percentages (Mock values, update as necessary)
+          COMMIT_PCT=93    # Replace with actual value or logic to fetch percentage
+          PR_PCT=6         # Replace with actual value or logic to fetch percentage
+          ISSUE_PCT=1      # Replace with actual value or logic to fetch percentage
+          REVIEW_PCT=0     # Replace with actual value or logic to fetch percentage
 
-      - name: Set Git User Identity
-        run: |
-          git config --global user.email "pranjalsailwal09@gmail.com"
-          git config --global user.name "Pranjal Sailwal"
-
-      - name: Pull Latest Changes
-        run: |
-          git pull origin main --rebase
-
-      - name: Handle Merge Conflicts (if any)
-        run: |
-          git merge --strategy-option theirs
-
-      #- name: Run automation scripts
-        #run: |
-          # Your existing automation script logic here
-          #git add .
-          # Commit and push will be handled dynamically by the create_commit function
-          #git push origin main
-
-
-      - name: Run automation script
-        env:
-          GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
-        run: |
-          #!/bin/bash
-
-          set -e  # Exit on error
-          set -x  # Enable debugging
-
-          # Function to log messages
-          log_message() {
-            echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
-          }
-
-          # Function to check command success
-          check_command() {
-            if [ $? -ne 0 ]; then
-              log_message "Error: Command failed: $1. Exiting with status $?"
-              exit 1
-            fi
-          }
-
-          # Function to make random choices
-          random_choice() {
-            echo $((RANDOM % $10))
-          }
-
-          random_task=$(random_choice 10)
-
-          # Define commit messages and types
-          commit_types=("fix" "feat" "chore" "docs" "style" "refactor" "test" "build")
-          commit_messages=(
-            "Fix minor bugs in the authentication module"
-            "Add a new feature for user profile management"
-            "Update README with recent changes"
-            "Refactor API handlers for better performance"
-            "Enhance error logging for debugging"
-            "Improve styling of the login page"
-            "Refactor the payment processing code"
-            "Update dependencies to address vulnerabilities"
-            "Resolve security issue in data encryption"
-            "Adjust configuration for deployment optimization"
-          )
-
-          # Function to create a commit
-          create_commit() {
-            commit_type=${commit_types[$((RANDOM % ${#commit_types[@]}))]}
-            commit_message="${commit_type}: ${commit_messages[$((RANDOM % ${#commit_messages[@]}))]}"
-            git add .
-            check_command "git add ."
-            if ! git diff-index --quiet HEAD; then
-              git commit -m "$commit_message" || true
-              check_command "git commit"
-              git push || true
-              check_command "git push"
-              log_message "Commit added: $commit_message"
-            else
-              log_message "No changes to commit"
-            fi
-          }
-
-          # Function to create an issue
-          create_issue() {
-            title="Automated Issue - $(date +'%Y-%m-%d %H:%M:%S')"
-            body="This issue was created automatically on $(date +'%Y-%m-%d %H:%M:%S'). Please review it."
-            gh issue create --title "$title" --body "$body"
-            check_command "gh issue create"
-            log_message "Issue created: $title"
-          }
-
-          # Function to create a pull request
-          create_pull_request() {
-            branch="feature/$(date +'%Y%m%d%H%M%S')"
-            git config --global user.email "pranjalsailwal09@gmail.com"
-            git config --global user.name "sailwalpranjal"
-            git checkout -b "$branch"
-            check_command "git checkout -b $branch"
-            echo "Temporary changes for testing" > temp.txt
-            git add temp.txt
-            check_command "git add temp.txt"
-            git commit -m "Add temporary changes for testing"
-            check_command "git commit"
-            git push --set-upstream origin "$branch"
-            check_command "git push"
-            pr_title="Automated PR - $(date +'%Y-%m-%d %H:%M:%S')"
-            pr_body="This PR was created automatically from the branch: $branch."
-            gh pr create --base main --head "$branch" --title "$pr_title" --body "$pr_body"
-            check_command "gh pr create"
-            log_message "Pull request created: $pr_title"
-          }
-
-          # Function to review code
-          review_code() {
-            prs=$(gh pr list --state open --json number --jq '.[] | .number')
-            if [ -n "$prs" ]; then
-              pr_number=$(echo "$prs" | head -n 1)
-              gh pr review "$pr_number" --approve --body "Reviewed and approved on $(date +'%Y-%m-%d %H:%M:%S')."
-              check_command "gh pr review"
-              log_message "Pull request #$pr_number approved"
-            else
-              log_message "No open pull requests available for review"
-            fi
-          }
-
-          # Function to merge pull requests
-          merge_pull_request() {
-            prs=$(gh pr list --state open --json number --jq '.[] | .number')
-            if [ -n "$prs" ]; then
-              pr_number=$(echo "$prs" | head -n 1)
-              gh pr merge "$pr_number" --merge --body "Merged changes from PR #$pr_number."
-              check_command "gh pr merge"
-              log_message "Pull request #$pr_number merged successfully"
-            else
-              log_message "No open pull requests to merge"
-            fi
-          }
-
-          # Function to close a pull request
-          close_pull_request() {
-            prs=$(gh pr list --state open --json number --jq '.[] | .number')
-            if [ -n "$prs" ]; then
-              pr_number=$(echo "$prs" | head -n 1)
-              gh pr close "$pr_number" --body "Closing this PR as it is no longer needed."
-              check_command "gh pr close"
-              log_message "Pull request #$pr_number closed"
-            else
-              log_message "No open pull requests to close"
-            fi
-          }
-
-          # Function to delete branches
-          delete_branches() {
-            branches=$(git branch -r | grep 'origin/feature/')
-            if [ -n "$branches" ]; then
-              for branch in $branches; do
-                branch_name="${branch#origin/}"
-                git config user.email "pranjalsailwal09@gmail.com"
-                git config user.name "sailwalpranjal"
-                if [ "$branch_name" != "main" ]; then
-                  git push origin --delete "$branch_name"
-                  check_command "git push origin --delete $branch_name"
-                  log_message "Deleted branch $branch_name"
-                else
-                  log_message "Skipped deleting protected branch: $branch_name"
-                fi
-              done
-            else
-              log_message "No branches to delete"
-            fi
-
-          # Function to create a new branch
-          create_branch() {
-            new_branch="feature/$(date +'%Y%m%d%H%M%S')"
-            git checkout -b "$new_branch"            
-            git config user.email "pranjalsailwal09@gmail.com"
-            git config user.name "sailwalpranjal"
-            check_command "git checkout -b $new_branch"
-            git push --set-upstream origin "$new_branch"
-            check_command "git push --set-upstream origin $new_branch"
-            git config user.email "pranjalsailwal09@gmail.com"
-            git config user.name "sailwalpranjal"
-            log_message "New branch created: $new_branch"
-          }
-
-          # Function to label an issue
-          label_issue() {
-            issues=$(gh issue list --state open --json number --jq '.[] | .number')
-            if [ -n "$issues" ]; then
-              issue_number=$(echo "$issues" | head -n 1)
-              gh issue edit "$issue_number" --add-label "needs-triage"
-              check_command "gh issue edit"
-              log_message "Label 'needs-triage' added to issue #$issue_number"
-            else
-              log_message "No issues available to label"
-            fi
-          }
-
-          # Function to assign an issue
-          assign_issue() {
-            issues=$(gh issue list --state open --json number --jq '.[] | .number')
-            if [ -n "$issues" ]; then
-              issue_number=$(echo "$issues" | head -n 1)
-              gh issue edit "$issue_number" --assign "@me"
-              check_command "gh issue edit"
-              log_message "Assigned issue #$issue_number to @me"
-            else
-              log_message "No issues available to assign"
-            fi
-          }
-
-          # Function to update repository settings
-          update_repo_settings() {
-            gh repo edit --description "Updated description to reflect recent changes."
-            check_command "gh repo edit"
-            log_message "Repository description updated"
-          }
-
-          # Function to manage Actions workflows
-          manage_workflows() {
-            if [ -d "./workflows/" ]; then
-              workflow_files=$(ls ./workflows/ 2>/dev/null || true)
-              if [ -n "$workflow_files" ]; then
-                for file in $workflow_files; do
-                  mv "./workflows/$file" "./workflows/backup-$file"
-                  check_command "mv ./workflows/$file ./workflows/backup-$file"
-                  log_message "Backed up workflow file: $file"
-                done
-            else
-              log_message "No workflow files found for management"
-            fi
+          # Priority logic: favor underrepresented activities
+          if [[ $REVIEW_PCT -lt 10 ]]; then
+            NEXT_ACTION="review"
+          elif [[ $ISSUE_PCT -lt 10 ]]; then
+            NEXT_ACTION="issue"
+          elif [[ $PR_PCT -lt 10 ]]; then
+            NEXT_ACTION="pr"
           else
-            log_message "Workflows directory does not exist"
+            NEXT_ACTION="commit"
           fi
 
-          # Function to run code analysis
-          run_code_analysis() {
-            log_message "Running code analysis"
-            flake8 .
-            check_command "flake8 ."
-          }
+          echo "::set-output name=action::${NEXT_ACTION}"
 
-          # Function to delete closed issues
-          delete_issues() {
-            issues=$(gh issue list --state closed --json number --jq '.[] | .number')
-            if [ -n "$issues" ]; then
-              for issue_number in $issues; do
-                gh issue delete "$issue_number" --confirm
-                check_command "gh issue delete"
-                log_message "Deleted issue #$issue_number"
+      - name: Perform Action
+        run: |
+          case "${{ steps.decide_action.outputs.action }}" in
+            commit)
+              echo "Making changes to the file and committing..."
+              git config --global user.email "user@example.com"
+              git config --global user.name "Automated Script"
+              echo "// Change made by script on $(date)" >> YOUR_FILE_PLACEHOLDER.txt
+              git add .
+              git commit -m "Update regarding specific functionality"
+              git push origin main
+              ;;
+            pr)
+              echo "Creating and resolving a PR..."
+              git checkout -b feature-auto-pr
+              echo "// Auto-generated changes for PR" >> auto_change.txt
+              git add .
+              git commit -m "Feature: auto-generated PR"
+              git push origin feature-auto-pr
+              gh pr create --title "Auto PR Feature" --body "This PR was automatically created."
+              gh pr merge feature-auto-pr --squash --delete-branch --auto
+              ;;
+            issue)
+              echo "Creating and closing an issue..."
+              ISSUE_NUM=$(gh issue create --title "Auto Issue" --body "This is a scripted issue." | grep -o '[0-9]\+')
+              gh issue close $ISSUE_NUM --comment "Issue automatically resolved."
+              ;;
+            review)
+              echo "Simulating code review..."
+              gh pr list --state open --limit 1 | grep -o '#[0-9]\+' | while read pr_id; do
+                gh pr review $pr_id --approve --body "Reviewed: Looks good!"
               done
-            else
-              log_message "No closed issues to delete"
-            fi
-          }
-
-          # Randomly choose a task to perform
-          #random_task=$(random_choice 10)
-
-          case $random_task in
-            0)
-              log_message "Task: Creating a commit"
-              create_commit()
-              ;;
-            1)
-              log_message "Task: Creating an issue"
-              create_issue()
-              ;;
-            2)
-              log_message "Task: Creating a pull request"
-              create_pull_request()
-              ;;
-            3)
-              log_message "Task: Reviewing code"
-              review_code()
-              ;;
-            4)
-              log_message "Task: Merging a pull request"
-              merge_pull_request()
-              ;;
-            5)
-              log_message "Task: Closing a pull request"
-              close_pull_request()
-              ;;
-            6)
-              log_message "Task: Deleting branches"
-              delete_branches()
-              ;;
-            7)
-              log_message "Task: Creating a branch"
-              create_branch()
-              ;;
-            8)
-              log_message "Task: Labeling an issue"
-              label_issue()
-              ;;
-            9)
-              log_message "Task: Assigning an issue"
-              assign_issue()
-              ;;
-            *)
-              log_message "No valid task selected"
               ;;
           esac
 
-          # Include a sleep period if time is between 03:00 AM and 08:00 AM
-          current_hour=$(date +'%H')
-          if [ "$current_hour" -ge 3 ] && [ "$current_hour" -lt 8 ]; then
-            log_message "Sleeping until 09:00 AM"
-            sleep $(( (9 - current_hour) * 3600 ))
-          fi
+      - name: Update Activity Tracking
+        run: |
+          echo "Updating the auto_change.txt for tracking purposes..."
+          echo "$(date): Updated by ${GITHUB_ACTOR}" >> auto_change.txt
+          git add auto_change.txt
+          git commit -m "Update activity log"
+          git push origin main
 
-          log_message "Task execution completed"
+      - name: Clean Up
+        run: |
+          echo "Ensuring no untracked files or branches are left..."
+          git branch -D feature-auto-pr || true
+          git stash clear
+          git clean -f
