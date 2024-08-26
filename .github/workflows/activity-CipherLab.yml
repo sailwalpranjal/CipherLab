@@ -16,7 +16,7 @@ jobs:
       - name: Set up GitHub CLI
         run: |
           sudo apt-get update
-          sudo apt-get install gh
+          sudo apt-get install -y gh
           echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
 
       - name: Run automation script
@@ -57,8 +57,8 @@ jobs:
             commit_type=${commit_types[$((RANDOM % ${#commit_types[@]}))]}
             commit_message="${commit_type}: ${commit_messages[$((RANDOM % ${#commit_messages[@]}))]}"
             git add .
-            git commit -m "$commit_message"
-            git push
+            git commit -m "$commit_message" || true
+            git push || true
             log_message "Commit added: $commit_message"
           }
 
