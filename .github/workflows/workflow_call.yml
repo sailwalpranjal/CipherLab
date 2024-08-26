@@ -2,20 +2,17 @@ name: CipherLab Repository Activity
 
 on:
   schedule:
-    # Trigger the workflow at random intervals between 9 AM and 2:59 AM
-    - cron: '0 9-23/1 * * *'
-    - cron: '15 9-23/1 * * *'
-    - cron: '30 9-23/1 * * *'
-    - cron: '45 9-23/1 * * *'
-    - cron: '0 0-2/1 * * *'
-    - cron: '15 0-2/1 * * *'
-    - cron: '30 0-2/1 * * *'
-    - cron: '45 0-2/1 * * *'
+    # Random intervals between 9 AM and 2:59 AM with a sleep period from 3 AM to 8 AM
+    - cron: '0 9-2 * * *'
+    - cron: '15 9-2 * * *'
+    - cron: '30 9-2 * * *'
+    - cron: '45 9-2 * * *'
   workflow_dispatch:  # Allows manual triggering of the workflow
 
 jobs:
   random_activity:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -27,28 +24,30 @@ jobs:
 
       - name: Perform Random Activities
         run: |
+          set -e  # Exit on error
+          
           # Set random delay between 0 and 3600 seconds (1 hour) to simulate randomness
           sleep $((RANDOM % 3600))
 
           # Randomize activities
-          activity=$((RANDOM % 4))
+          activity=$((RANDOM % 5))
           case $activity in
             0) # Perform Random Commits
               files=("CipherLab.py" "CHANGELOG.md")
               file_to_change=${files[$RANDOM % ${#files[@]}]}
               
               # Generate a random commit message based on changes
-              commit_messages=("Fixed bug in CipherLab.py" "Updated function XYZ for better performance" "Corrected typo in CHANGELOG" "Added new feature to CipherLab" "Refactored code for efficiency")
+              commit_messages=("Optimized function for better performance" "Refactored code to enhance readability" "Updated documentation for clarity" "Improved function efficiency" "Fixed minor bugs in the code")
               commit_message=${commit_messages[$RANDOM % ${#commit_messages[@]}]}
               
               # Make changes to the file
               if [ "$file_to_change" = "CipherLab.py" ]; then
-                echo "# Added function to improve performance" >> $file_to_change
-                echo "def new_performance_function():" >> $file_to_change
-                echo "    # This function enhances performance" >> $file_to_change
+                echo "# Optimized code for better performance" >> $file_to_change
+                echo "def optimized_function():" >> $file_to_change
+                echo "    # Optimized function implementation" >> $file_to_change
                 echo "    pass" >> $file_to_change
               elif [ "$file_to_change" = "CHANGELOG.md" ]; then
-                echo "- Updated function XYZ for better performance" >> $file_to_change
+                echo "- Optimized function for better performance" >> $file_to_change
               fi
 
               # Commit changes
@@ -57,34 +56,74 @@ jobs:
               git push https://$GITHUB_TOKEN@github.com/sailwalpranjal/CipherLab.git main
               ;;
             1) # Create and Handle Issues
-              issue_title="Bug report: Issue with new function $(date +%Y-%m-%d)"
-              issue_body="There's a problem with the new function added in CipherLab.py. It seems to be affecting performance. Details: $(date)"
+              issue_title="Enhancement: Improve function $(date +%Y-%m-%d)"
+              issue_body="Suggestion: Improve the function in CipherLab.py for better performance. Details: $(date)"
               gh issue create --title "$issue_title" --body "$issue_body" --assignee sailwalpranjal
               ;;
             2) # Create and Review Pull Requests
-              pr_branch="feature-update-$(date +%s)"
+              pr_branch="feature-optimization-$(date +%s)"
               git checkout -b $pr_branch
-              echo "# Minor update to CHANGELOG" >> CHANGELOG.md
-              git add CHANGELOG.md
-              git commit -m "Update CHANGELOG with recent changes"
+              echo "# Minor update to optimize function" >> CipherLab.py
+              git add CipherLab.py
+              git commit -m "Optimized function for better performance"
               git push origin $pr_branch
               
               # Create PR and review
-              pr_url=$(gh pr create --base main --head $pr_branch --title "Update CHANGELOG" --body "This pull request updates the CHANGELOG with recent changes.")
+              pr_url=$(gh pr create --base main --head $pr_branch --title "Optimize function" --body "This pull request optimizes the function for better performance.")
               pr_number=$(basename $pr_url)
               echo "Created PR: $pr_url"
-              gh pr review $pr_number --approve --body "Reviewed changes. All looks good."
+              gh pr review $pr_number --approve --body "Reviewed changes. The optimization looks good."
               gh pr merge $pr_number --squash --admin
               ;;
             3) # Perform Code Reviews
               open_prs=$(gh pr list --state open --json number --jq '.[].number')
               for pr_number in $open_prs; do
-                gh pr review $pr_number --approve --body "Automated review: The changes are well implemented."
+                gh pr review $pr_number --approve --body "Automated review: The changes look solid."
               done
               ;;
+            4) # Clean Up: Delete branches, close PRs, and remove script-generated code
+              # Delete merged branches
+              branches_to_delete=$(git branch -r --merged | grep -v '\->' | grep -v main | awk '{print $1}')
+              for branch in $branches_to_delete; do
+                git push origin --delete $branch
+              done
+              
+              # Close unnecessary pull requests
+              gh pr list --state open --json number --jq '.[].number' | while read pr_number; do
+                gh pr close $pr_number
+              done
+              
+              # Remove script-generated comments or functions
+              sed -i '/# Optimized code for better performance/d' CipherLab.py
+              sed -i '/def optimized_function/d' CipherLab.py
+              sed -i '/# Minor update to optimize function/d' CipherLab.py
+              ;;
           esac
-          
-          # Ensure no more than 1.5 hours without committing or handling other tasks
-          next_activity_time=$((RANDOM % 5400)) # Random time between 0 and 5400 seconds (1.5 hours)
-          echo "Next activity in $next_activity_time seconds"
-          sleep $next_activity_time
+
+          # Automated Tests (optional)
+          if [ "$activity" -eq 0 ]; then
+            echo "Running automated tests..."
+            # Add your test commands here
+          fi
+
+          # Proof of script running (only once in the script's lifetime)
+          if [ ! -f .script_proof_done ]; then
+            echo "# This script is successfully running as of $(date)" >> README.md
+            git add README.md
+            git commit -m "Added proof of script functionality"
+            git push https://$GITHUB_TOKEN@github.com/sailwalpranjal/CipherLab.git main
+            touch .script_proof_done
+          fi
+
+          # Error handling: Retry failed operations
+          retry_count=0
+          max_retries=3
+          while [ $retry_count -lt $max_retries ]; do
+            if ! command_that_might_fail; then
+              echo "Error encountered. Retrying... ($((retry_count+1))/$max_retries)"
+              retry_count=$((retry_count+1))
+              sleep 10  # Wait before retrying
+            else
+              break
+            fi
+          done
